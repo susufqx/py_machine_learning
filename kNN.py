@@ -1,5 +1,6 @@
 import operator
 from numpy import *
+from os import listdir
 
 
 def createDataSet():
@@ -78,10 +79,69 @@ def datingClassTest():
     errorCount = 0.0
     for i in range(numTestVecs):
         classifierResult = classify0(normMat[i, :], normMat[numTestVecs:m, :],  # 此处normMat[numTestVecs:m, :]表示另外那90%的样本矩阵
-                                     datingLabels[numTestVecs:m, 3])  # 此处normMat[numTestVecs:m, 3] 90%的样本矩阵的第四列，也就是标签
+                                     datingLabels[numTestVecs:m], 3)  # 此处normMat[numTestVecs:m, 3] 90%的样本矩阵的第四列，也就是标签
         print "the classifier came back with: %d, the real answer is: %d" \
             % (classifierResult, datingLabels[i])
 
         if (classifierResult != datingLabels[i]):
             errorCount += 1.0
     print "the total error rate is: %f" % (errorCount/float(numTestVecs))
+
+
+'''
+预测函数
+'''
+
+
+def classifyPerson():
+    resultList = ['not at all', 'in samll doses', 'in large doses']
+    percentTats = float(raw_input(
+        "percentage of time spent playing video game?"))
+    ffMiles = float(raw_input("frequent flier miles earned per year"))
+    iceCream = float(raw_input("liters of ice cream consumed per year"))
+    datingDataMat, datingLabels = file2matrix('datingTsetSet2.txt')
+    normMat, ranges, minVals = autoNorm(datingDataMat)
+    inArr = array([ffMiles, percentTats, iceCream])
+    classifierResult = classify0(
+        (inArr-minVals)/ranges, normMat, datingLabels, 3)
+    print "You will probably like this person: ", \
+        resultList[classifierResult - 1]
+
+
+def img2vector(filename):
+    returnVect = zeros((1, 1024))
+    fr = open(filename)
+    for i in range(32):
+        lineStr = fr.readline()
+        for j in range(32):
+            returnVect[0, 32*i+j] = int(lineStr[j])
+    return returnVect
+
+
+def handwritingClassTest():
+    hwLines = []
+    trainingFileList = listdir('trainingDigits')
+    m = len(trainingFileList)
+    trainingMat = zeros((m, 1024))
+    for i in range(m):
+        fileNameStr = trainingFileList[i]
+        fileStr = fileNameStr.split('.')[0]
+        classNumStr = int(fileStr.split('_')[0])
+        hwLabels.append(classNumStr)
+        trainingMat[i, :] = img2vector('trainingDigits/%s' % fileNameStr)
+    testFileList = listdir('testDigits')
+    errorCount = 0.0
+    mTest = len(testFileList)
+    for i in range(mTest):
+        fileNameStr = testFileList[i]
+        fileStr = fileNameStr.split('.')[0]
+        classNumStr = int(fileStr.split('_')[0])
+        vectorUnderTest = img2vector('testDigits/%s' % fileNameStr)
+        classifierResult = classify0(vectorUnderTest,
+                                     trainingMat, hwLabels, 3)
+        print "the classifier came back with: %d, the real answer is: %d" \
+            % (classifierResult, classNumStr)
+        if (classifierResult != classNumStr):
+            errorCount += 1.0
+    print "\nthe total number of errors is: %d" % errorCount
+    print "\nthe total error rate is: %f" % (errorCount/float(mTest))
