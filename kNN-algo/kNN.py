@@ -41,7 +41,7 @@ def file2matrix(filename):
     classLabelVector = []
     index = 0
     for line in arrayOLines:
-        line = line.strip()  # 去除首尾空格
+        line = line.strip()  # 去除首尾空格 
         listFromLine = line.split('\t')
         returnMat[index, :] = listFromLine[0:3]
         classLabelVector.append(int(listFromLine[-1]))
