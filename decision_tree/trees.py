@@ -1,3 +1,4 @@
+import operator
 from math import log
 
 
@@ -36,7 +37,7 @@ def splitDataSet(dataSet, axis, value):
     return retDataSet
 
 
-def chooseBestfeatureToSplit(dataSet):
+def chooseBestFeatureToSplit(dataSet):
     numFeatures = len(dataSet[0]) - 1
     baseEntropy = calcShannonEnt(dataSet)
     bestInfoGain = 0.0
@@ -54,3 +55,32 @@ def chooseBestfeatureToSplit(dataSet):
             bestInfoGain = infoGain
             bestFeature = i
     return bestFeature
+
+
+def majorityCnt(classList):
+    classCount = {}
+    for vote in classList:
+        if vote not in classCount.keys(): classCount[vote] = 0
+        classCount[vote] += 1
+    sortedClassCount = sorted(classCount.iteritems(), \
+        key=operator.itemgetter(1), reverse=True)
+    return sortedClassCount[0][0]
+
+
+def createTree(dataSet, labels):
+    classList = [example[-1] for example in dataSet]
+    if classList.count(classList[0]) == len(classList):
+        return classList[0]                                 # 类别完全相同则停止继续划分，递归的第一个截止条件
+    if len(dataSet[0]) == 1:
+        return majorityCnt(classList)                       # 遍历完所有的特征时，返回出现次数最多的特征，这种情况下也是停止划分，递归的第二个截止条件
+    bestFeat = chooseBestFeatureToSplit(dataSet)
+    bestFeatLabel = labels[bestFeat]
+    myTree = {bestFeatLabel: {}}
+    del(labels[bestFeat])
+    featValues = [example[bestFeat] for example in dataSet]  #  获取最好特征分类的对应的列表
+    uniqueVals = set(featValues)  # 避免重复， set是无序不重复的
+    for value in uniqueVals:
+        subLabels = labels[:]    # 此处递归，继续划分
+        myTree[bestFeatLabel][value] = createTree(splitDataSet\
+                            (dataSet, bestFeat, value), subLabels)
+    return myTree  # 这就是一个嵌套字典，就是决策树的python字典表达
